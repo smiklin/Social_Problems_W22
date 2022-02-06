@@ -1,0 +1,64 @@
+---
+title: "Practice Rmd"
+author: "Sanja Miklin"
+date: "2/5/2022"
+output: pdf_document
+---
+
+
+This is an R markdown file! Follow along for a bit of practice.
+
+
+```{r setup, include=FALSE}
+
+#Ignore this bit, it's just for setup
+
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+```
+
+
+# This is a heading. 
+
+The code below defines a variable "string" and then prints its value. 
+Run the chunk below by clicking on the green arrow or navigating to "Run Current Chunk" in the toolbar (under Run). (you can also click on the chunk and press  Command + Option + R on a mac, or Ctrl + Alt + R on Windows). Once you run the chunk, "string" should appear under "values" on the environment on the right of this screen.
+
+
+Try replacing the content of the variable (keep the quotation marks).
+
+```{r helloworld, echo=FALSE}
+string <- "Hello World!"
+
+print(string)
+```
+
+# Data
+
+You can easily look at some data in R. We'll use a built in data set called cars. 
+You can run a single line of code by clicking on the line and then either navigating to "Run Selected Line(s)" in the toolbar (under Run) or using Command+Enter/Ctrl + Enter.
+
+Try running just the line that says "data <- cars." You can click on "data" in the environment to view the whole table in a new window.
+
+The second line of code, head(data) will print the first ten rows of the table. 
+
+```{r table, echo=FALSE}
+data <- cars
+
+head(data)
+```
+
+# Including Plots
+
+We can also make some plots. The plot takes the data and plots speed on the x axis and distance on the y axis. 
+
+
+```{r pressure, echo=FALSE}
+data %>%
+  ggplot(aes(x=speed, y = dist))+
+  geom_point()+
+  labs(title="Change in stopping distance with an increase in car speed")
+```
+
+
+Now click on "Knit" in the toolbar. You should be able to generate a PDF, if you want.
+if you want the code to show up in the PDF, remove the bit that says ", echo=FALSE" at the beginning of each chunk.
