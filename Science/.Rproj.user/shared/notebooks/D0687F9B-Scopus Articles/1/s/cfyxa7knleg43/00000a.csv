@@ -1,0 +1,8 @@
+"0","top_fields <- cumulative_subject[1:4,] #select how many top fields you want to display"
+"0",""
+"0","articles_by_subject %>%"
+"0","  filter(field %in% top_fields$field)%>%"
+"0","  ggplot((aes(x=year, y = prop, color = field)))+"
+"0","  geom_line()+"
+"0","  theme_minimal() +"
+"0","  labs(title = ""Proportion of articles in a field on the topic"")"

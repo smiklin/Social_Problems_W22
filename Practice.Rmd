@@ -27,7 +27,7 @@ Run the chunk below by clicking on the green arrow or navigating to "Run Current
 Try replacing the content of the variable (keep the quotation marks).
 
 ```{r helloworld, echo=FALSE}
-string <- "Hello World!"
+string <- "A different message"
 
 print(string)
 ```

@@ -1,0 +1,6 @@
+"0","  articles_by_subject <- articles_by_subject %>%
+    left_join(subject_articles)%>%
+    mutate(prop = n/total)
+"
+"1","Joining, by = c(""field"", ""year"")
+"

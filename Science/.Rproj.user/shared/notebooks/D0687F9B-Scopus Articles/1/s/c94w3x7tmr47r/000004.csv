@@ -1,0 +1,7 @@
+"0","total_articles <- read.csv(""total_articles.csv"")"
+"0","subject_articles <- read.csv(""subject_articles.csv"")"
+"0","fields <- read.csv(""scopus_subjects.csv"")"
+"0","asjc_codes <- read.csv(""asjc.csv"")"
+"0",""
+"0",""
+"0","files <- list.files()"

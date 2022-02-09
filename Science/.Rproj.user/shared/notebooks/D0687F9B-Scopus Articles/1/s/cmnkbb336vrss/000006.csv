@@ -1,0 +1,5 @@
+"0","article_count %>%"
+"0","  ggplot((aes(x=year, y = n)))+"
+"0","  geom_line(color=""#008080"")+"
+"0","  theme_minimal() +"
+"0","  labs(title = ""Total number of articles on the topic over time"")"
