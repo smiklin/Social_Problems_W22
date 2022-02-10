@@ -1,11 +1,12 @@
 library(tidyverse)
 library(jsonlite)
-library(scales)
 
+#scroll down to df <- read.csv("All_articles_slim.csv")
+#if you just want to explore. It will read the existing data
 
 
 #setup
-key <- "4ac7d025db4d4706c106aa0f3de643a2"
+key <- ""
 
 query <- "TITLE-ABS-KEY ( child AND abuse )" #add your query here
 
@@ -57,25 +58,38 @@ colnames(df) <- c("Year", "Title", "Publication", "Abstract", "Pub_Type",
 write.csv(df, "All_articles_slim.csv", row.names = FALSE)
 
 
+### start here if you just want to explore the "child abuse" data
+
 df <- read.csv("All_articles_slim.csv")
 
 # look for a particular co-occurring word and plot as a proportion of all articles
 
-#term <- "battered"
-term <- "maltreatment"
-term <- "brain"
+# here are some examples I looked at. Remove the hashtag to run the line
+# term <- "battered"
+# term <- "maltreatment"
+# term <- "brain"
+# term <- "problem"
+# term <- "public health"
+# term <- "mother"
+# term <- "trauma"
+# term <- "caus"
+# term <- "parent"
+
+term <- "suicid"
+
 
 df %>%
+  filter(Year>1954) %>%
   mutate(has_term = map_dbl(All_text, ~ifelse(grepl(term, .),1,0))) %>%
   group_by(Year) %>%
   summarise(has_term = sum(has_term),
             total = n())%>%
   mutate(prop = has_term/total)%>%
   ggplot(aes(x = Year, y = prop))+
-  geom_line()+
+  geom_line(color="#008080")+
   theme_minimal()+
-  labs(title = paste0('Proportion of articles on a topic that feature the term "', term, '"'))+
-  scale_x_continuous(breaks= pretty_breaks())
+  labs(title = paste0('Proportion of articles on a topic that feature the term "', term, '"'))
+
 
 
 

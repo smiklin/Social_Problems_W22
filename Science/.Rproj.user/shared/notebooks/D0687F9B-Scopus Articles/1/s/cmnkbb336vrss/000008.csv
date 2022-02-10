@@ -1,8 +1,0 @@
-"0",""
-"0",""
-"0","article_count %>%"
-"0","  ggplot((aes(x=year, y = prop)))+"
-"0","  geom_line(color=""#008080"")+"
-"0","  theme_minimal()+"
-"0","  labs(title = ""Proportion of all Scopus articles on the topic over time"")"
-"0",""

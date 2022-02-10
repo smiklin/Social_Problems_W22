@@ -14,8 +14,8 @@ library(scales) # optional. can install by running install.packages("scales")
 
 
 ```{r read_data}
-total_articles <- read.csv("total_articles.csv")
-subject_articles <- read.csv("subject_articles.csv")
+total_articles <- read.csv("total_articles_US.csv")
+subject_articles <- read.csv("subject_articles_US.csv")
 fields <- read.csv("scopus_subjects.csv")
 asjc_codes <- read.csv("asjc.csv")
 
@@ -47,6 +47,9 @@ The query used to do the search is `r query`, looking at data from `r year_start
 
 
 # Total number of articles for your topic
+
+NOTE: If running for the first time, make sure to delete "article_count.csv" from the folder.
+If that file exists, the code will not run and replace it (this is a failsafe)
 
 ```{r total_articles}
 
@@ -93,6 +96,10 @@ article_count %>%
 ```
 
 
+# Look at changes by subject
+
+NOTE: If running for the first time, make sure to delete "articles_by_subject.csv" from the folder.
+If that file exists, the code will not run and replace it (this is a failsafe)
 
 ```{r by suject}
 if ("articles_by_subject.csv" %in% files){
