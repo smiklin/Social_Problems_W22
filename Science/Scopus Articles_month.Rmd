@@ -1,0 +1,256 @@
+---
+title: "Scopus Articles"
+author: "Sanja Miklin"
+date: "2/7/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(jsonlite)
+library(scales) # optional. can install by running install.packages("scales")
+```
+
+
+```{r read_data}
+total_articles <- read.csv("total_articles_month.csv")
+subject_articles <- read.csv("subject_articles_month.csv")
+fields <- read.csv("scopus_subjects.csv")
+asjc_codes <- read.csv("asjc.csv")
+
+months <- c("January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December")
+
+
+files <- list.files()
+```
+
+
+# Setting up search parameters
+
+```{r}
+key <- ""
+
+
+query <- "TITLE-ABS-KEY ( child AND abuse )" #add your query here
+
+#ignore this last part, it's just defining some other data
+url <- "https://api.elsevier.com/content/search/scopus?query="
+query <- query %>%
+  str_replace_all("\\s", "\\+") %>%
+  str_replace_all("\\(", "\\%28") %>%
+  str_replace_all("\\)", "\\%29") %>%
+  str_replace_all('\\"', '\\%22')
+```
+
+The query used to do the search is `r query`, looking at data from `r year_start` to `r year_end`.
+
+
+# Total number of articles for your topic
+
+NOTE: If running for the first time, make sure to delete "article_count.csv" from the folder.
+If that file exists, the code will not run and replace it (this is a failsafe)
+
+```{r total_articles}
+
+if ("article_count.csv" %in% files){
+  #read existing file, if any
+  article_count <- read.csv("article_count.csv")
+} else {
+  #create empty data frame
+  article_count <- tibble(year = c(2019:2022),month = list(months), n=0) %>%
+  unnest(month)
+  article_count <- article_count[12:37,]
+
+  #run search by year
+  for (i in 1:nrow(article_count)){
+    year = article_count$year[i]
+    month = article_count$month[i]
+    call <- paste0(url,"%28+",query,"+PUBDATETXT%28",month,"+",year,"%29%29&apikey=",key)
+    ans <- fromJSON(call)
+    article_count$n[i] <- as.integer(ans$`search-results`$`opensearch:totalResults`) 
+  }
+  
+  #join to total scopus counts
+  article_count <- article_count%>%
+    left_join(total_articles)%>%
+    mutate(prop = n/total)
+  #save file
+  write.csv(article_count, "article_count.csv", row.names = FALSE)
+}
+```
+
+Plotting articles by year (as total and as proportion of all)
+
+```{r plot_totals}
+article_count %>%
+  ggplot((aes(x=year, y = n)))+
+  geom_line(color="#008080")+
+  theme_minimal() +
+  labs(title = "Total number of articles on the topic over time")
+
+
+article_count %>%
+  ggplot((aes(x=year, y = prop)))+
+  geom_line(color="#008080")+
+  theme_minimal()+
+  labs(title = "Proportion of all Scopus articles on the topic over time")
+
+```
+
+
+# Look at changes by subject
+
+NOTE: If running for the first time, make sure to delete "articles_by_subject.csv" from the folder.
+If that file exists, the code will not run and replace it (this is a failsafe)
+
+```{r by suject}
+if ("articles_by_subject.csv" %in% files){
+  #read existing file, if any
+  articles_by_subject <- read.csv("articles_by_subject.csv")
+} else {
+    
+  #create empty data frame
+  articles_by_subject <- tibble(year = c(2019:2022),
+                             month = list(months), 
+                             n=0) %>%
+  unnest(month) 
+
+  articles_by_subject <- articles_by_subject[12:37,]
+
+  articles_by_subject <- articles_by_subject %>%
+    mutate(Abb = list(fields$Abb)) %>%
+    unnest(Abb)
+
+
+  # run search by subject and year and month
+  for (i in 1:nrow(articles_by_subject)){
+    year <- articles_by_subject$year[i]
+    month <- articles_by_subject$month[i]
+    field <-articles_by_subject$Abb[i]
+    
+    call <- paste0(url,"%28+",query,"+AND+SUBJAREA+%28+",field,"+%29+AND+PUBDATETXT%28",month,"+",year,"%29%29&apikey=",key)
+    ans <- fromJSON(call)
+    articles_by_subject$n[i] = as.integer(ans$`search-results`$`opensearch:totalResults`) 
+  }
+  
+  #rename columns
+  colnames(articles_by_subject) <- c("year", "month", "n", "field")
+  
+  #combine with total counts
+  articles_by_subject <- articles_by_subject %>%
+    left_join(subject_articles)%>%
+    mutate(prop = n/total)
+  
+  #save file
+  write.csv(articles_by_subject, "articles_by_subject.csv", row.names = FALSE)
+}
+
+```
+
+
+
+#Find top fields
+
+```{r top_field}
+
+cumulative_subject <- articles_by_subject %>%
+  group_by(field)%>%
+  summarise(n= sum(n)) %>%
+  arrange(-n) %>%
+  mutate(total = sum(article_count$n))%>%
+  mutate(prop = n/total)
+
+head(cumulative_subject)
+
+```
+
+
+# Plot changes over times by top fields
+
+```{r plot_by subject}
+top_fields <- cumulative_subject[1:4,] #select how many top fields you want to display
+
+articles_by_subject %>%
+  filter(field %in% top_fields$field)%>%
+  ggplot((aes(x=year, y = prop, color = field)))+
+  geom_line()+
+  theme_minimal() +
+  labs(title = "Proportion of articles in a field on the topic")
+
+articles_by_subject %>%
+  filter(field %in% top_fields$field)%>%
+  ggplot((aes(x=year, y = prop)))+
+  geom_line()+
+  theme_minimal()+
+  facet_wrap(~field, scales = "free")+
+  labs(title = "Proportion of articles in a field on the topic")
+
+```
+
+
+#if you're interested in specific ASJC code
+
+```{r}
+
+ASJC_list <- c("2735", "3312") # include your ASJC code. if you want to look at more than one code, you should separate them like this c("code1", "code2")
+
+#this code will look for both all articles within a code
+#and articles within a code on the particular prolem
+
+if ("articles_by_asjc.csv" %in% files){
+  #read existing file, if any
+  articles_by_asjc <- read.csv("articles_by_asjc.csv")
+} else {
+  #create empty df
+  articles_by_asjc <- tibble(year = c(year_start:year_end), asjc = list(ASJC_list), total=0, n=0) %>%
+    unnest(asjc)
+  
+  #run search by year
+  for (i in 1:nrow(articles_by_asjc)){
+    year = articles_by_asjc$year[i]
+    asjc = articles_by_asjc$asjc[i]
+    
+    #look for total articles
+    call <- paste0(url,"%28+SUBJTERMS+%28+",asjc,"+%29+AND+PUBYEAR+IS+",year,"+%29&apikey=",key)
+    ans <- fromJSON(call)
+    articles_by_asjc$total[i] <- as.integer(ans$`search-results`$`opensearch:totalResults`) 
+    
+    #look for articles on topic
+    call <- paste0(url,"%28+",query,"+AND+SUBJTERMS+%28+",asjc,"+%29+AND+PUBYEAR+IS+",year,"+%29&apikey=",key)
+    ans <- fromJSON(call)
+    articles_by_asjc$n[i] <- as.integer(ans$`search-results`$`opensearch:totalResults`) 
+  }
+  
+  articles_by_asjc <- articles_by_asjc %>%
+    mutate(prop = n/total)
+  
+  write.csv(articles_by_asjc, "articles_by_asjc.csv")
+
+}
+```
+
+# plot by ASJC
+
+```{r}
+
+articles_by_asjc %>%
+  ggplot((aes(x=year, y = prop, color = asjc)))+
+  geom_line()+
+  theme_minimal() +
+  labs(title = "Proportion of articles in a field on the topic")+
+  scale_x_continuous(breaks= pretty_breaks())
+
+
+
+articles_by_asjc %>%
+  ggplot((aes(x=year, y = prop)))+
+  geom_line()+
+  theme_minimal()+
+  facet_wrap(~asjc, scales = "free")+
+  labs(title = "Proportion of articles in a field on the topic")+
+  scale_x_continuous(breaks= pretty_breaks())
+
+```
+

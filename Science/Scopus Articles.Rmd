@@ -104,7 +104,7 @@ If that file exists, the code will not run and replace it (this is a failsafe)
 ```{r by suject}
 if ("articles_by_subject.csv" %in% files){
   #read existing file, if any
-  articles_by_subject <- read.csv("articles_by_subject.csv", row.names = FALSE)
+  articles_by_subject <- read.csv("articles_by_subject.csv")
 } else {
     
   #create empty data frame
